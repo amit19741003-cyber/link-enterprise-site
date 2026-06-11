@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
-app.permanent_session_lifetime = timedelta(minutes=1)
+app.permanent_session_lifetime = timedelta(minutes=16)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
