@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import os
 
 app = Flask(__name__)
 
 app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
+app.permanent_session_lifetime = timedelta(minutes=1)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -16,7 +17,8 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if username == "admin" and password == "YourStrongPassword123":
+        if username == "link73876@yahoo.com" and password == "Benap@73876":
+            session.permanent = True
             session["logged_in"] = True
             return redirect("/inbox")
 
