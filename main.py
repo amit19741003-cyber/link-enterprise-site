@@ -192,36 +192,20 @@ def receive_message():
 from zoneinfo import ZoneInfo
 @app.route("/inbox")
 def inbox():
-
     if not session.get("logged_in"):
         return redirect("/login")
 
     messages = WhatsAppMessage.query.order_by(
         WhatsAppMessage.id.desc()
-    ).limit(100).all()
+    ).limit(200).all()
 
-    html = "<h1>Link Enterprise WhatsApp Inbox</h1>"
-
+    # Convert timestamps to IST
+    ist = ZoneInfo("Asia/Kolkata")
     for msg in messages:
-
-        ist_time = ""
-
         if msg.timestamp:
-            ist_time = msg.timestamp.astimezone(
-                ZoneInfo("Asia/Kolkata")
-            ).strftime("%d-%m-%Y %I:%M:%S %p")
+            msg.timestamp = msg.timestamp.astimezone(ist)
 
-        html += f"""
-        <div style='margin-bottom:20px'>
-            <b>{msg.mobile_number}</b><br>
-            {msg.message_text or ''}<br>
-            {msg.direction}<br>
-            {ist_time}
-        </div>
-        <hr>
-        """
-
-    return html
+    return render_template("inbox.html", messages=messages)
 
 @app.route("/logout")
 def logout():
