@@ -1,10 +1,34 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import requests
 import os
 
 app = Flask(__name__)
+
+app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == "admin" and password == "YourStrongPassword123":
+            session["logged_in"] = True
+            return redirect("/inbox")
+
+        return "Invalid Credentials"
+
+    return """
+    <form method="POST">
+        <input name="username" placeholder="Username"><br><br>
+        <input name="password" type="password" placeholder="Password"><br><br>
+        <button type="submit">Login</button>
+    </form>
+    """
 
 # PostgreSQL / Neon Database Configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
@@ -167,6 +191,9 @@ from zoneinfo import ZoneInfo
 @app.route("/inbox")
 def inbox():
 
+    if not session.get("logged_in"):
+        return redirect("/login")
+
     messages = WhatsAppMessage.query.order_by(
         WhatsAppMessage.id.desc()
     ).limit(100).all()
@@ -193,6 +220,11 @@ def inbox():
         """
 
     return html
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
 
 
 # =========================
