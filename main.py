@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import requests
 import os
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 
@@ -174,15 +175,23 @@ def inbox():
     html = "<h1>Link Enterprise WhatsApp Inbox</h1>"
 
     for msg in messages:
-        html += f"""
-        <div style='margin-bottom:20px'>
-            <b>{msg.mobile_number}</b><br>
-            {msg.message_text or ''}<br>
-            {msg.direction}<br>
-            {msg.timestamp}
-        </div>
-        <hr>
-        """
+
+    ist_time = ""
+
+    if msg.timestamp:
+        ist_time = msg.timestamp.astimezone(
+            ZoneInfo("Asia/Kolkata")
+        ).strftime("%d-%m-%Y %I:%M:%S %p")
+
+    html += f"""
+    <div style='margin-bottom:20px'>
+        <b>{msg.mobile_number}</b><br>
+        {msg.message_text or ''}<br>
+        {msg.direction}<br>
+        {ist_time}
+    </div>
+    <hr>
+    """
 
     return html
 
