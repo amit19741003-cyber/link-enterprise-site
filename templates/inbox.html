@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Link Enterprise — WhatsApp Inbox</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --wa-green:       #25D366;
+      --wa-dark-green:  #128C7E;
+      --wa-teal:        #075E54;
+      --wa-light-green: #DCF8C6;
+      --wa-bg:          #ECE5DD;
+      --wa-panel:       #FFFFFF;
+      --wa-sidebar-bg:  #FFFFFF;
+      --wa-header-bg:   #075E54;
+      --wa-msg-in:      #FFFFFF;
+      --wa-msg-out:     #DCF8C6;
+      --wa-divider:     #E0E0E0;
+      --wa-text:        #111B21;
+      --wa-subtext:     #667781;
+      --wa-tick:        #53BDEB;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--wa-bg);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 380px;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      background: var(--wa-sidebar-bg);
+      border-right: 1px solid var(--wa-divider);
+    }
+
+    .sidebar-header {
+      background: var(--wa-header-bg);
+      color: #fff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .header-actions { display: flex; gap: 12px; }
+    .header-actions svg { cursor: pointer; opacity: 0.9; }
+    .header-actions svg:hover { opacity: 1; }
+
+    .search-bar {
+      padding: 8px 12px;
+      background: #F0F2F5;
+      border-bottom: 1px solid var(--wa-divider);
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 8px 14px 8px 36px;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 14px;
+      color: var(--wa-text);
+      outline: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--wa-subtext);
+    }
+
+    .contacts-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .contacts-list::-webkit-scrollbar { width: 5px; }
+    .contacts-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--wa-divider);
+      transition: background 0.15s;
+    }
+
+    .contact-item:hover, .contact-item.active {
+      background: #F0F2F5;
+    }
+
+    .contact-item.active { background: #EBFBF5; }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .contact-info { flex: 1; overflow: hidden; }
+
+    .contact-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .contact-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--wa-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .contact-time {
+      font-size: 11.5px;
+      color: var(--wa-subtext);
+      white-space: nowrap;
+    }
+
+    .contact-preview {
+      font-size: 13px;
+      color: var(--wa-subtext);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .unread-badge {
+      background: var(--wa-green);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      margin-left: 4px;
+    }
+
+    /* ── MAIN CHAT AREA ── */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--wa-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0h80v80H0z' fill='%23ECE5DD'/%3E%3Cpath d='M10 10h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4zM0 30h4v4H0zm20 0h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4zm-50 20h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4zM0 70h4v4H0zm20 0h4v4h-4zm20 0h4v4h-4zm20 0h4v4h-4z' fill='%23D4C5B5' opacity='.3'/%3E%3C/svg%3E");
+    }
+
+    .chat-header {
+      background: var(--wa-header-bg);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+    }
+
+    .chat-header .avatar { width: 40px; height: 40px; font-size: 15px; }
+
+    .chat-header-info { flex: 1; }
+    .chat-header-info .name { font-size: 15px; font-weight: 600; }
+    .chat-header-info .status { font-size: 12px; opacity: 0.8; }
+
+    .messages-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 8%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .messages-scroll::-webkit-scrollbar { width: 5px; }
+    .messages-scroll::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+    /* Date divider */
+    .date-divider {
+      text-align: center;
+      margin: 16px 0 8px;
+    }
+
+    .date-divider span {
+      background: rgba(255,255,255,0.85);
+      color: var(--wa-subtext);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.1);
+    }
+
+    /* Message bubble */
+    .message-row {
+      display: flex;
+      margin-bottom: 2px;
+    }
+
+    .message-row.incoming { justify-content: flex-start; }
+    .message-row.outgoing { justify-content: flex-end; }
+
+    .bubble {
+      max-width: 65%;
+      padding: 6px 10px 22px 10px;
+      border-radius: 8px;
+      font-size: 14.2px;
+      line-height: 1.45;
+      color: var(--wa-text);
+      position: relative;
+      word-break: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+    }
+
+    .message-row.incoming .bubble {
+      background: var(--wa-msg-in);
+      border-top-left-radius: 0;
+    }
+
+    .message-row.outgoing .bubble {
+      background: var(--wa-msg-out);
+      border-top-right-radius: 0;
+    }
+
+    .bubble-meta {
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      font-size: 11px;
+      color: var(--wa-subtext);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
+    .bubble-tail-in::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -8px;
+      width: 0; height: 0;
+      border-top: 8px solid var(--wa-msg-in);
+      border-left: 8px solid transparent;
+    }
+
+    .bubble-tail-out::before {
+      content: '';
+      position: absolute;
+      top: 0; right: -8px;
+      width: 0; height: 0;
+      border-top: 8px solid var(--wa-msg-out);
+      border-right: 8px solid transparent;
+    }
+
+    /* media/link bubble */
+    .bubble a {
+      color: var(--wa-dark-green);
+      word-break: break-all;
+      text-decoration: none;
+    }
+
+    .bubble a:hover { text-decoration: underline; }
+
+    /* Empty state */
+    .empty-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--wa-subtext);
+      gap: 12px;
+      opacity: 0.7;
+    }
+
+    .empty-chat svg { opacity: 0.3; }
+    .empty-chat p { font-size: 15px; }
+
+    /* Bottom bar (non-functional, cosmetic) */
+    .chat-input-bar {
+      background: #F0F2F5;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--wa-divider);
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      background: #fff;
+      outline: none;
+      color: var(--wa-text);
+      box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    }
+
+    .chat-input-bar input::placeholder { color: #aaa; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--wa-subtext);
+      padding: 6px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .icon-btn:hover { background: rgba(0,0,0,.06); }
+
+    .send-btn {
+      background: var(--wa-teal);
+      color: #fff;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .send-btn:hover { background: var(--wa-dark-green); }
+
+    /* Logout */
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.85);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .logout-btn:hover { background: rgba(255,255,255,0.12); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .sidebar { width: 100%; min-width: unset; }
+      .chat-area { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Link Enterprise</h1>
+    <div class="header-actions">
+      <!-- Search icon -->
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <!-- Logout -->
+      <form action="/logout" method="get" style="display:inline">
+        <button class="logout-btn" type="submit">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Search or start new chat" id="contactSearch" oninput="filterContacts(this.value)"/>
+    </div>
+  </div>
+
+  <div class="contacts-list" id="contactsList">
+    {% set contacts = {} %}
+    {% for msg in messages %}
+      {% if msg.mobile_number not in contacts %}
+        {% set _ = contacts.update({msg.mobile_number: msg}) %}
+      {% endif %}
+    {% endfor %}
+
+    {% for number, latest in contacts.items() %}
+      {% set hue = (loop.index0 * 47) % 360 %}
+      <div class="contact-item {% if loop.first %}active{% endif %}"
+           onclick="showChat('{{ number }}')"
+           id="contact-{{ number }}"
+           data-number="{{ number }}">
+        <div class="avatar" style="background: hsl({{ hue }}, 55%, 45%)">
+          {{ number[-2:] }}
+        </div>
+        <div class="contact-info">
+          <div class="contact-top">
+            <span class="contact-name">+{{ number }}</span>
+            <span class="contact-time">
+              {% if latest.timestamp %}
+                {{ latest.timestamp.strftime('%I:%M %p') }}
+              {% endif %}
+            </span>
+          </div>
+          <div class="contact-preview">
+            {% if latest.message_text %}
+              {{ latest.message_text[:40] }}{% if latest.message_text|length > 40 %}…{% endif %}
+            {% else %}
+              <em style="opacity:.6">Media</em>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</aside>
+
+<!-- ══════════════ CHAT AREA ══════════════ -->
+<main class="chat-area" id="chatArea">
+
+  {% set contacts = {} %}
+  {% for msg in messages %}
+    {% if msg.mobile_number not in contacts %}
+      {% set _ = contacts.update({msg.mobile_number: msg}) %}
+    {% endif %}
+  {% endfor %}
+
+  {% for number, _ in contacts.items() %}
+  {% set hue = (loop.index0 * 47) % 360 %}
+
+  <div class="chat-pane" id="pane-{{ number }}"
+       style="display:{% if loop.first %}flex{% else %}none{% endif %}; flex-direction:column; height:100%;">
+
+    <!-- Chat header -->
+    <div class="chat-header">
+      <div class="avatar" style="background: hsl({{ hue }}, 55%, 45%)">{{ number[-2:] }}</div>
+      <div class="chat-header-info">
+        <div class="name">+{{ number }}</div>
+        <div class="status">WhatsApp</div>
+      </div>
+      <!-- More options icon -->
+      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="cursor:pointer;opacity:.8">
+        <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+      </svg>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-scroll" id="scroll-{{ number }}">
+      {% set prev_date = namespace(value=None) %}
+      {% set contact_msgs = messages | selectattr('mobile_number', 'equalto', number) | list | sort(attribute='id') %}
+
+      {% for msg in contact_msgs %}
+        {% set msg_date = msg.timestamp.strftime('%d %b %Y') if msg.timestamp else '' %}
+
+        {% if msg_date != prev_date.value %}
+          <div class="date-divider"><span>{{ msg_date }}</span></div>
+          {% set prev_date.value = msg_date %}
+        {% endif %}
+
+        <div class="message-row {{ msg.direction }}">
+          <div class="bubble {% if msg.direction == 'incoming' %}bubble-tail-in{% else %}bubble-tail-out{% endif %}">
+            {% if msg.message_text %}
+              {% if msg.message_text.startswith('http') %}
+                <a href="{{ msg.message_text }}" target="_blank" rel="noopener">{{ msg.message_text }}</a>
+              {% else %}
+                {{ msg.message_text }}
+              {% endif %}
+            {% else %}
+              <em style="opacity:.5">📎 Media message</em>
+            {% endif %}
+            <div class="bubble-meta">
+              {% if msg.timestamp %}
+                {{ msg.timestamp.strftime('%I:%M %p') }}
+              {% endif %}
+              {% if msg.direction == 'outgoing' %}
+                <!-- Double tick -->
+                <svg width="14" height="10" viewBox="0 0 18 10" fill="{{ '#53BDEB' if msg.status == 'read' else '#aaa' }}">
+                  <path d="M1 5l4 4L12 1M6 5l4 4 5-8" stroke-width="1.8" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Input bar (cosmetic) -->
+    <div class="chat-input-bar">
+      <button class="icon-btn" title="Emoji">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </button>
+      <button class="icon-btn" title="Attach">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <input type="text" placeholder="Type a message"/>
+      <button class="send-btn" title="Send">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+
+</main>
+
+<script>
+  function showChat(number) {
+    // Deactivate all contacts
+    document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('contact-' + number).classList.add('active');
+
+    // Hide all panes
+    document.querySelectorAll('.chat-pane').forEach(el => el.style.display = 'none');
+    const pane = document.getElementById('pane-' + number);
+    if (pane) {
+      pane.style.display = 'flex';
+      // Scroll to bottom
+      const scroll = document.getElementById('scroll-' + number);
+      if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    }
+  }
+
+  function filterContacts(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('.contact-item').forEach(el => {
+      const num = el.dataset.number || '';
+      el.style.display = num.includes(q) ? '' : 'none';
+    });
+  }
+
+  // Scroll all panes to bottom on load
+  document.querySelectorAll('.messages-scroll').forEach(el => {
+    el.scrollTop = el.scrollHeight;
+  });
+</script>
+
+</body>
+</html>
